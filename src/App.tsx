@@ -1,18 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { People } from 'swapi-ts';
+import { People, Films } from 'swapi-ts';
 import { Person } from './Person';
 
 const App = () => {
 	const [searchTerm, setSearchTerm] = React.useState("");
 	const [people, setPeople] = useState<Person[]>([]);
+	const [films, setFilms] = useState<Map<string, string>>(new Map());
+
+	useEffect(() => {
+		Films.findBySearch([""])
+			.then(response => {
+				const urlsToTitles = new Map<string, string>();
+				response.resources.forEach(film => urlsToTitles.set(film.value.url, film.value.title));
+				setFilms(urlsToTitles);
+			});
+	}, []);
 
 	useEffect(() => {
 		People.findBySearch([searchTerm])
 			.then(response => {
 				const people = response.resources.map(person => ({
 					name: person.value.name,
-					films: person.value.films,
+					films: person.value.films.map(film => films.get(film.toString()) || ""),
 					height: person.value.height,
 					mass: person.value.mass,
 					hairColor: person.value.hair_color,
@@ -23,7 +33,7 @@ const App = () => {
 				}));
 				setPeople(people);
 			});
-	}, [searchTerm]);
+	}, [searchTerm, films]);
 
   return (
     <div className="App">

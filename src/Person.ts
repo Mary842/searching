@@ -2,7 +2,7 @@ import { IFilm } from 'swapi-ts';
 
 export type Person = {
 	name: string,
-	films: string[] | IFilm[],
+	films: string[],
 	height: string,
 	mass: string,
 	hairColor: string,
