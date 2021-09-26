@@ -1,24 +1,37 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { useState, useEffect } from 'react';
 import './App.css';
+import { People } from 'swapi-ts';
+import { Person } from './Person';
 
-function App() {
+const App = () => {
+	const [searchTerm, setSearchTerm] = React.useState("");
+	const [people, setPeople] = useState<Person[]>([]);
+
+	useEffect(() => {
+		People.findBySearch([searchTerm])
+			.then(response => {
+				const people = response.resources.map(person => ({
+					name: person.value.name,
+					films: person.value.films,
+					height: person.value.height,
+					mass: person.value.mass,
+					hairColor: person.value.hair_color,
+					skinColor: person.value.skin_color,
+					eyeColor: person.value.eye_color,
+					birthYear: person.value.birth_year,
+					gender: person.value.gender
+				}));
+				setPeople(people);
+			});
+	}, [searchTerm]);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    	<input
+        value={searchTerm}
+        onChange={event => setSearchTerm(event.target.value)}
+      />
+      {people.map((person, i) => (<div key={i}>{person.name}</div>))}
     </div>
   );
 }
