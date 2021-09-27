@@ -1,40 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { People, Films } from 'swapi-ts';
 import { Person } from './Person';
 import Table from 'react-bootstrap/Table';
+import axios from "axios";
 
 const App = () => {
 	const [searchTerm, setSearchTerm] = React.useState("");
 	const [people, setPeople] = useState<Person[]>([]);
 	const [films, setFilms] = useState<Map<string, string>>(new Map());
+  const [debouncedSearch, setDebouncedValue] = useState(searchTerm);
+  const delay = 500;
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(searchTerm);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm, delay]);
 
 	useEffect(() => {
-		Films.findBySearch([""])
+		axios.get("https://swapi.dev/api/films")
 			.then(response => {
 				const urlsToTitles = new Map<string, string>();
-				response.resources.forEach(film => urlsToTitles.set(film.value.url, film.value.title));
+				response.data.results.forEach((film: any) => urlsToTitles.set(film.url, film.title));
 				setFilms(urlsToTitles);
 			});
 	}, []);
 
 	useEffect(() => {
-		People.findBySearch([searchTerm])
+		axios.get(`https://swapi.dev/api/people/?search=${debouncedSearch}`)
 			.then(response => {
-				const people = response.resources.map(person => ({
-					name: person.value.name,
-					films: person.value.films.map(film => films.get(film.toString()) || "").join(", "),
-					height: person.value.height,
-					mass: person.value.mass,
-					hairColor: person.value.hair_color,
-					skinColor: person.value.skin_color,
-					eyeColor: person.value.eye_color,
-					birthYear: person.value.birth_year,
-					gender: person.value.gender
+				const people = response.data.results.map((person: any) => ({
+					name: person.name,
+					films: person.films.map((film: string) => films.get(film || "")).join(", "),
+					height: person.height,
+					mass: person.mass,
+					hairColor: person.hair_color,
+					skinColor: person.skin_color,
+					eyeColor: person.eye_color,
+					birthYear: person.birth_year,
+					gender: person.gender
 				}));
 				setPeople(people);
 			});
-	}, [searchTerm, films]);
+	}, [debouncedSearch, films]);
 
   return (
     <div className="app">
